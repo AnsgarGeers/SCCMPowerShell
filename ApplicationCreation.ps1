@@ -1,4 +1,12 @@
-##------------ Some code from @adbertram at Pluralsight Course Planning & Creating Applications in System Center ConfigMgr 2012 http://pluralsight.com/training/courses/TableOfContents?courseName=planning-creating-applications-sccm-2012&highlight= ------ ###
+# ---------------------------------------------------
+# Version: .2
+# Author: Joshua Duffney
+# Date: 07/11/2014
+# Description: Using PowerShell to create an SCCM Application from information in a .csv file.
+# Comments: Refer to ApplicationCreation.csv in the repo to complete the script.
+# Sources: Some code from @adbertram at Pluralsight Course Planning & Creating Applications in System Center ConfigMgr 2012 http://pluralsight.com/training/courses/TableOfContents?courseName=planning-creating-applications-sccm-2012&highlight
+# ---------------------------------------------------
+
 
 $pkgs = Import-Csv "C:\scripts\CreateApplication.csv"
     foreach($pkg in $pkgs)
