@@ -1,3 +1,13 @@
+# ---------------------------------------------------
+# Version: 1.0
+# Author: Joshua Duffney
+# Date: 07/13/2014
+# Description: Using PowerShell to create an AD Group & then an SCCM query Collection group to fill it with members of the AD Group.
+# Comments: Gathers information from host to create group name\type and specify the managerby field of the AD Group.
+# ---------------------------------------------------
+
+
+
 #Gather Group Type and Application Name
 Write-Host ("Provide the Application Name") -ForegroundColor Magenta
 $App = Read-Host
