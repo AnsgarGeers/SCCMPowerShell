@@ -4,6 +4,7 @@
 # Date: 07/15/2014
 # Description: Using PowerShell to check for a list of devices in SCCM and AD then returning the results in a table format.
 # Comments: Populate computers.txt with a list of computer names then run the script.
+# References: @thesurlyadm1n, @adbertram
 # ---------------------------------------------------
 
 
