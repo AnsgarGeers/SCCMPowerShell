@@ -11,7 +11,7 @@ Function NewOUCollection {
     [string]$SiteServerName,
     [string]$SiteCode,
     [string]$OU,
-    [string]$CollectionFolder
+    [string]$CollectionFolder,
     [string]$CollectionName
     )
 
