@@ -37,7 +37,7 @@ Function NewOUCollection {
     }
 
     Try {
-    New-CMDeviceCollection -LimitingCollectionName "All Users and User Groups" -Name $CollectionName -RefreshType ConstantUpdate
+    New-CMDeviceCollection -LimitingCollectionName "All Desktop and Server Clients" -Name $CollectionName -RefreshType ConstantUpdate
     Add-CMDeviceCollectionQueryMembershipRule -CollectionName $CollectionName -RuleName "Query-$CollectionName" -QueryExpression $QueryExpression
     $Collection = Get-CMDeviceCollection -Name $CollectionName
     Move-CMObject -FolderPath ".\DeviceCollection\$CollectionFolder" -InputObject $Collection -ErrorAction Stop | Out-Null
