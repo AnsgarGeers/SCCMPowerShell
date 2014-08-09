@@ -17,6 +17,7 @@ Function NewOUCollection {
 
     $QueryExpression = "select SMS_R_SYSTEM.ResourceID,SMS_R_SYSTEM.ResourceType,SMS_R_SYSTEM.Name,SMS_R_SYSTEM.SMSUniqueIdentifier,SMS_R_SYSTEM.ResourceDomainORWorkgroup,SMS_R_SYSTEM.Client from SMS_R_System where SMS_R_System.SystemOUName = 'Domain.COM/WORKSTATIONS/$OU'"
     
+    ## Import SCCM Module ##
     Try
     {
     Import-Module "$(Split-Path $env:SMS_ADMIN_UI_PATH -Parent)\ConfigurationManager.psd1" -ErrorAction Stop
@@ -36,6 +37,7 @@ Function NewOUCollection {
         "This Script attempted to import the SCCM module"
     }
 
+    ## Creates CM collection, add query rule and moves to the specified folder
     Try {
     New-CMDeviceCollection -LimitingCollectionName "All Desktop and Server Clients" -Name $CollectionName -RefreshType ConstantUpdate
     Add-CMDeviceCollectionQueryMembershipRule -CollectionName $CollectionName -RuleName "Query-$CollectionName" -QueryExpression $QueryExpression
