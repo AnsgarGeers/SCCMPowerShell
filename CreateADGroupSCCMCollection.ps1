@@ -1,68 +1,86 @@
 # ---------------------------------------------------
-# Version: 1.0
+# Version: 2.0
 # Author: Joshua Duffney
 # Date: 07/13/2014
+# Updated 8/11/2014
 # Description: Using PowerShell to create an AD Group & then an SCCM query Collection group to fill it with members of the AD Group.
 # Comments: Gathers information from host to create group name\type and specify the managerby field of the AD Group.
 # ---------------------------------------------------
 
+Function NewADGrpCMCollection {
+
+    #Collect required data with Paramters
+    Param (
+        [string]$ServerName,
+        [string]$SiteCode,
+        [string]$ApplicationName,
+        [string]$DeploymentTarget,
+        [string]$ADGrpManager
+    )
+    # Connect to CM
+    Try
+    {
+    Import-Module "$(Split-Path $env:SMS_ADMIN_UI_PATH -Parent)\ConfigurationManager.psd1" -ErrorAction Stop
+    Set-Location "$($SiteCode):"
+    }
+    Catch [System.IO.FileNotFoundException]
+    {
+        "SCCM Admin Console not installed"
+    }
+    Catch
+    {
+        $ErrorMessage = $_.Exception.Message
+        $FailedItem = $_.Exception.ItemName
+    }
+    Finally
+    {
+        "This Script attempted to import the SCCM module"
+    }
 
 
-#Gather Group Type and Application Name
-Write-Host ("Provide the Application Name") -ForegroundColor Magenta
-$App = Read-Host
+    #Switch statment for different deployment groups
+    Switch ($DeploymentTarget) {
 
-Write-Host ("Please specify the type of group to create: InstallUser,InstallDevice,UninstallUser,UninstallDevice") -ForegroundColor Magenta
-$GroupOptions = Read-Host
+        "Device"
+        {
+            #Set CM Collection and ADGrp name variables and ADGrp descritption variables.
+            $Name = 'SCCM-SWD-' + $ApplicationName + '-Install'
+            $Description = "SCCM AD group for deploying $ApplicationName to devices ONLY"
+        
+            #Create ADGrp
+            New-ADGroup -GroupScope Global -GroupCategory Security -Name $Name -DisplayName $Name -SamAccountName $Name -ManagedBy $ADGrpManager -Description $Description -Path "OU=Groups,OU=Kiewit,DC=KIEWITPLAZA,DC=com"
 
-#Switch statement for 4 different group types
-switch ($GroupOptions)
-{
-    "InstallUser"
-    {
-        $GroupName = 'SCCM-' + $App + 'InstallUser'
-        $Description = "SCCM User Collection for $App"
-    }
-    "UninstallUser"
-    {
-        $GroupName = 'SCCM-' + $App + 'UninstallUser'
-        $Description = "SCCM User Collection for $App"
-    }
-    "InstallDevice"
-    {
-        $GroupName = 'SCCM-' + $App + 'InstallDevice'
-        $Description = "SCCM Device Collection for $App"
-    }
-    "UninstallDevice"
-    {
-        $GroupName = 'SCCM-' + $App + 'UninstallDevice'
-        $Description = "SCCM Device Collection for $App"
-    }
-    default
-    {
-        Write-warning = 'Invalid input, please use InstallUser, InstallDevice, UninstallUser, or UninstallDevice'
+            #Create CM Collection
+            New-CMDeviceCollection -LimitingCollectionName "All Users and User Groups" -Name $Name -RefreshType ConstantUpdate
+
+            #Set CM MembershipQuery
+            Add-CMDeviceCollectionQueryMembershipRule -CollectionName $Name -RuleName "Query-$Name" -QueryExpression "select SMS_R_SYSTEM.ResourceID,SMS_R_SYSTEM.ResourceType,SMS_R_SYSTEM.Name,SMS_R_SYSTEM.SMSUniqueIdentifier,SMS_R_SYSTEM.ResourceDomainORWorkgroup,SMS_R_SYSTEM.Client from SMS_R_System where SMS_R_System.SystemGroupName = 'Domain\\$Name'"
+
+            #Move CM Collection to Software Folder
+            Move-CMObject -InputObject (Get-CMDeviceCollection -Name $Name) -FolderPath .\DeviceCollection\Software
+        }
+        "User"
+            {
+            #Set CM Collection and ADGrp name variables and ADGrp descritption variables.
+            $Name = "'SCCM-SWU-' + $ApplicationName + '-Install'"
+            $Description = "SCCM AD group for deploying $ApplicationName to users ONLY"
+        
+            #Create ADGrp
+            New-ADGroup -GroupScope Global -GroupCategory Security -Name $Name -DisplayName $Name -SamAccountName $Name -ManagedBy $ADGrpManager -Description $Description -Path "OU=Groups,OU=Kiewit,DC=KIEWITPLAZA,DC=com"
+
+            #Create CM Collection
+            New-CMUserCollection -LimitingCollectionName "All Users and User Groups" -Name $Name -RefreshType ConstantUpdate
+
+            #Set CM MembershipQuery
+            Add-CMUserCollectionQueryMembershipRule -CollectionName $Name -RuleName "Query-$Name" -QueryExpression "select SMS_R_SYSTEM.ResourceID,SMS_R_SYSTEM.ResourceType,SMS_R_SYSTEM.Name,SMS_R_SYSTEM.SMSUniqueIdentifier,SMS_R_SYSTEM.ResourceDomainORWorkgroup,SMS_R_SYSTEM.Client from SMS_R_System where SMS_R_System.SystemGroupName = 'Domain\\$Name'"
+
+            #Move CM Collection to Software Folder
+            Move-CMObject -InputObject (Get-CMUserCollection -Name $Name) -FolderPath .\UserCollection\Software
+        }
     }
 }
 
-if (-Not ($GroupName -eq $null))
+foreach ($App in (Get-Content "C:\scripts\content\adobegrps.txt"))
 {
-#Gather group manager
-Write-Host ("Who is the manager of this group?") -ForegroundColor Magenta
-$ManagedBy = Read-Host
-
-#Display Group Info
-Write-Host "Group name is $GroupName" -ForegroundColor Green
-Write-Host "Manager is $ManagedBy" -ForegroundColor Green
-Write-Host "Description is $Description" -ForegroundColor Green
-
-## Create AD Group
-New-ADGroup -GroupScope Global -GroupCategory Security -Name $GroupName -DisplayName $GroupName -SamAccountName $GroupName -ManagedBy $ManagedBy -Description $Description -Path "OU=Groups,OU=Kiewit,DC=KIEWITPLAZA,DC=com" -WhatIf
-
-## Create Collections
-if ($GroupName -Match 'User') {Write-Host "Creating new User Collection $GroupName" ; New-CMUserCollection -LimitingCollectionName "All Users and User Groups" -Name $GroupName -RefreshType ConstantUpdate -WhatIf} 
-if ($GroupName -Match 'Device') {Write-Host "Creating new Device Collection $GroupName" ; New-CMDeviceCollection -LimitingCollectionName "All Systems" -Name $GroupName -RefreshType ConstantUpdate -WhatIf}
-
-## Create MembershipQuery
-if ($GroupName -Match 'User') {Write-Host "Creating new User Collection $GroupName" ; Add-CMUserCollectionQueryMembershipRule -CollectionName $GroupName -RuleName "Query-$GroupName" -QueryExpression "select SMS_R_SYSTEM.ResourceID,SMS_R_SYSTEM.ResourceType,SMS_R_SYSTEM.Name,SMS_R_SYSTEM.SMSUniqueIdentifier,SMS_R_SYSTEM.ResourceDomainORWorkgroup,SMS_R_SYSTEM.Client from SMS_R_System where SMS_R_System.SystemGroupName = 'Domain\\$GroupName'" -WhatIf}
-if ($GroupName -Match 'Device') {Write-Host "Creating new Device Collection Query $GroupName" ; Add-CMDeviceCollectionQueryMembershipRule -CollectionName $GroupName -RuleName "Query-$GroupName" -QueryExpression "select SMS_R_SYSTEM.ResourceID,SMS_R_SYSTEM.ResourceType,SMS_R_SYSTEM.Name,SMS_R_SYSTEM.SMSUniqueIdentifier,SMS_R_SYSTEM.ResourceDomainORWorkgroup,SMS_R_SYSTEM.Client from SMS_R_System where SMS_R_System.SystemGroupName = 'Domain\\$GroupName'" -WhatIf}
+NewADGrpCMCollection -ServerName ServerName -SiteCode SiteCode -ApplicationName "AppName" -DeploymentTarget "Device" -ADGrpManager "Joshua.Duffney"
 }
