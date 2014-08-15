@@ -1,8 +1,8 @@
 # ---------------------------------------------------
-# Version: 2.0
+# Version: 3.0
 # Author: Joshua Duffney
 # Date: 07/13/2014
-# Updated 8/11/2014
+# Updated 8/15/2014
 # Description: Using PowerShell to create an AD Group & then an SCCM query Collection group to fill it with members of the AD Group.
 # Comments: Gathers information from host to create group name\type and specify the managerby field of the AD Group.
 # ---------------------------------------------------
@@ -15,7 +15,8 @@ Function NewADGrpCMCollection {
         [string]$SiteCode,
         [string]$ApplicationName,
         [string]$DeploymentTarget,
-        [string]$ADGrpManager
+        [string]$ADGrpManager,
+        [string]$Domain
     )
     # Connect to CM
     Try
@@ -54,7 +55,7 @@ Function NewADGrpCMCollection {
             New-CMDeviceCollection -LimitingCollectionName "All Users and User Groups" -Name $Name -RefreshType ConstantUpdate
 
             #Set CM MembershipQuery
-            Add-CMDeviceCollectionQueryMembershipRule -CollectionName $Name -RuleName "Query-$Name" -QueryExpression "select SMS_R_SYSTEM.ResourceID,SMS_R_SYSTEM.ResourceType,SMS_R_SYSTEM.Name,SMS_R_SYSTEM.SMSUniqueIdentifier,SMS_R_SYSTEM.ResourceDomainORWorkgroup,SMS_R_SYSTEM.Client from SMS_R_System where SMS_R_System.SystemGroupName = 'Domain\\$Name'"
+            Add-CMDeviceCollectionQueryMembershipRule -CollectionName $Name -RuleName "Query-$Name" -QueryExpression "select SMS_R_SYSTEM.ResourceID,SMS_R_SYSTEM.ResourceType,SMS_R_SYSTEM.Name,SMS_R_SYSTEM.SMSUniqueIdentifier,SMS_R_SYSTEM.ResourceDomainORWorkgroup,SMS_R_SYSTEM.Client from SMS_R_System where SMS_R_System.SystemGroupName = '$Domain\\$Name'"
 
             #Move CM Collection to Software Folder
             Move-CMObject -InputObject (Get-CMDeviceCollection -Name $Name) -FolderPath .\DeviceCollection\Software
@@ -72,7 +73,7 @@ Function NewADGrpCMCollection {
             New-CMUserCollection -LimitingCollectionName "All Users and User Groups" -Name $Name -RefreshType ConstantUpdate
 
             #Set CM MembershipQuery
-            Add-CMUserCollectionQueryMembershipRule -CollectionName $Name -RuleName "Query-$Name" -QueryExpression "select SMS_R_SYSTEM.ResourceID,SMS_R_SYSTEM.ResourceType,SMS_R_SYSTEM.Name,SMS_R_SYSTEM.SMSUniqueIdentifier,SMS_R_SYSTEM.ResourceDomainORWorkgroup,SMS_R_SYSTEM.Client from SMS_R_System where SMS_R_System.SystemGroupName = 'Domain\\$Name'"
+            Add-CMUserCollectionQueryMembershipRule -CollectionName $Name -RuleName "Query-$Name" -QueryExpression "select SMS_R_SYSTEM.ResourceID,SMS_R_SYSTEM.ResourceType,SMS_R_SYSTEM.Name,SMS_R_SYSTEM.SMSUniqueIdentifier,SMS_R_SYSTEM.ResourceDomainORWorkgroup,SMS_R_SYSTEM.Client from SMS_R_System where SMS_R_System.SystemGroupName = '$Domain\\$Name'"
 
             #Move CM Collection to Software Folder
             Move-CMObject -InputObject (Get-CMUserCollection -Name $Name) -FolderPath .\UserCollection\Software
