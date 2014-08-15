@@ -16,7 +16,8 @@ Function NewADGrpCMCollection {
         [string]$ApplicationName,
         [string]$DeploymentTarget,
         [string]$ADGrpManager,
-        [string]$Domain
+        [string]$Domain,
+        [string]$LimitingCollection
     )
     # Connect to CM
     Try
@@ -52,7 +53,7 @@ Function NewADGrpCMCollection {
             New-ADGroup -GroupScope Global -GroupCategory Security -Name $Name -DisplayName $Name -SamAccountName $Name -ManagedBy $ADGrpManager -Description $Description -Path "OU=Groups,OU=Kiewit,DC=KIEWITPLAZA,DC=com"
 
             #Create CM Collection
-            New-CMDeviceCollection -LimitingCollectionName "All Users and User Groups" -Name $Name -RefreshType ConstantUpdate
+            New-CMDeviceCollection -LimitingCollectionName "$LimitingCollection" -Name $Name -RefreshType ConstantUpdate
 
             #Set CM MembershipQuery
             Add-CMDeviceCollectionQueryMembershipRule -CollectionName $Name -RuleName "Query-$Name" -QueryExpression "select SMS_R_SYSTEM.ResourceID,SMS_R_SYSTEM.ResourceType,SMS_R_SYSTEM.Name,SMS_R_SYSTEM.SMSUniqueIdentifier,SMS_R_SYSTEM.ResourceDomainORWorkgroup,SMS_R_SYSTEM.Client from SMS_R_System where SMS_R_System.SystemGroupName = '$Domain\\$Name'"
@@ -70,7 +71,7 @@ Function NewADGrpCMCollection {
             New-ADGroup -GroupScope Global -GroupCategory Security -Name $Name -DisplayName $Name -SamAccountName $Name -ManagedBy $ADGrpManager -Description $Description -Path "OU=Groups,OU=Kiewit,DC=KIEWITPLAZA,DC=com"
 
             #Create CM Collection
-            New-CMUserCollection -LimitingCollectionName "All Users and User Groups" -Name $Name -RefreshType ConstantUpdate
+            New-CMUserCollection -LimitingCollectionName "$LimitingCollection" -Name $Name -RefreshType ConstantUpdate
 
             #Set CM MembershipQuery
             Add-CMUserCollectionQueryMembershipRule -CollectionName $Name -RuleName "Query-$Name" -QueryExpression "select SMS_R_SYSTEM.ResourceID,SMS_R_SYSTEM.ResourceType,SMS_R_SYSTEM.Name,SMS_R_SYSTEM.SMSUniqueIdentifier,SMS_R_SYSTEM.ResourceDomainORWorkgroup,SMS_R_SYSTEM.Client from SMS_R_System where SMS_R_System.SystemGroupName = '$Domain\\$Name'"
@@ -83,5 +84,5 @@ Function NewADGrpCMCollection {
 
 foreach ($App in (Get-Content "C:\scripts\content\adobegrps.txt"))
 {
-NewADGrpCMCollection -ServerName ServerName -SiteCode SiteCode -ApplicationName "AppName" -DeploymentTarget "Device" -ADGrpManager "Joshua.Duffney"
+NewADGrpCMCollection -ServerName ServerName -SiteCode SiteCode -ApplicationName "AppName" -DeploymentTarget "Device" -ADGrpManager "Joshua.Duffney" -Domain "Domain" -LimitingCollection "All Desktop Clients"
 }
