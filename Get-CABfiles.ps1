@@ -1,3 +1,4 @@
+Function Get-CABfiles {
 <#
 .SYNOPSIS
 
@@ -59,9 +60,6 @@ http://www.deploymentresearch.com/Research/tabid/62/EntryId/69/The-Drivers-Saga-
 Coretech
 http://blog.coretech.dk/kea/automate-importing-and-creating-drivers-packages-in-sccm-2012-r2/
 #>
-
-Function Get-CABfiles {
-
 [CmdletBinding()]
 Param(
     [Parameter(Mandatory=$True,HelpMessage="Enter the location of the .CAB file")]
