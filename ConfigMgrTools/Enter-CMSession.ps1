@@ -1,3 +1,4 @@
+Function Enter-CMSession {
 <#
 .SYNOPSIS
 
@@ -16,8 +17,6 @@ Specifies the SiteCode of the SCCM server to connect to.
 Enter-CMSession -SiteCode PS1
 
 #>
-Function Enter-CMSession {
-
 [CmdletBinding()]
 
 param (
