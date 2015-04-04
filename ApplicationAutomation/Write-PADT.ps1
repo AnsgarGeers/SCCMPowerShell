@@ -139,7 +139,7 @@ End {
     $PADTtemplate = ($PADTtemplate).Replace("<#Name#>","'$Name'")
     $PADTtemplate = ($PADTtemplate).Replace("<#Version#>","'$Version'")
     $PADTtemplate = ($PADTtemplate).Replace("<#Date#>","'$Date'")
-    $PADTtemplate = ($PADTtemplate).Replace("<#Author#>","'Automation'")
+    $PADTtemplate = ($PADTtemplate).Replace("<#Author#>","'$env:USERNAME'")
     
     Write-Verbose -Message "Outputtin script to $ScriptOutLocation"
     $PADTtemplate | Out-String | Out-File "$ScriptOutLocation\Deploy-Application.ps1" -Force
