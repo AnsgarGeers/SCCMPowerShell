@@ -74,7 +74,7 @@ Param(
     
     [String]$OperatingSystem,
 
-    [string]$outputFilePath = 'D:\OSD\DriverSources'
+    [string]$outputFilePath
 
 )
 
